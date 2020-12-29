@@ -1,0 +1,87 @@
+Phase: LoanCompanies
+Input: Person Organization FinancialVerb Split
+
+// Because of the inclusion of Split, these must occur within a sentence.
+Rule: LoanCompanies
+(
+	({Organization} | {Person}):party1
+	({FinancialVerb}):fv
+	({Organization} | {Person}):party2
+):fvp
+-->
+{
+	AnnotationSet fvps = (AnnotationSet) bindings.get("fvp");
+	//Annotation fvpAnn = fvps.iterator().next();
+	
+	AnnotationSet fvs = (AnnotationSet) bindings.get("fv");
+	Annotation fvAnn = fvs.iterator().next();
+	
+	AnnotationSet party1s = (AnnotationSet) bindings.get("party1");
+	Annotation party1Ann = party1s.iterator().next();
+	
+	AnnotationSet party2s = (AnnotationSet) bindings.get("party2");
+	Annotation party2Ann = party2s.iterator().next();
+	
+	// Now, we get the text for the features for agent and recipient.
+	// They will be e.g. "issuer", "borrower", etc.  The text refers
+	// to the role that the agent and recipient play in the transaction.
+	
+	// isAgentSubject refers to whether the entity matched as "party1" above
+	// is the entity that serves the agent's role.
+	// If isAgentSubject is "no", party2 serves the role of the
+	// agent, and the other serves the role of the recipient.
+	
+	// For example: given "Microsoft loaned IBM"
+	// The roles present in that phrase are
+	//     agent = issuer, recipient = borrower
+	// 'party1' refers to "Microsoft" and 'party2' refers to "IBM"
+	// 'isAgentSubject?' would be set to "yes",
+	// indicating that Microsoft serves the role of agent because
+	// it comes before the FinancialVerb.
+	// The resulting features, therefore, will be:
+	//     issuer = Microsoft, borrower = IBM
+	
+	String agent = (String) fvAnn.getFeatures().get("agent");
+	String recipient = (String) fvAnn.getFeatures().get("recipient");
+	String isAgentSubject = (String) fvAnn.getFeatures().get("isAgentSubject");
+	
+	try
+	{
+		String party1Text = doc.getContent().getContent(
+				party1s.firstNode().getOffset(),
+				party1s.lastNode().getOffset()).toString();
+		
+		String party2Text = doc.getContent().getContent(
+				party2s.firstNode().getOffset(),
+				party2s.lastNode().getOffset()).toString();
+		
+		FeatureMap features = Factory.newFeatureMap();
+		features.putAll(fvAnn.getFeatures());
+		
+		if (isAgentSubject.equals("yes"))
+		{
+			features.put(agent, party1Text);
+			features.put(recipient, party2Text);
+		}
+		else // if (isAgentSubject.equals("no"))
+		{
+			features.put(agent, party2Text);
+			features.put(recipient, party1Text);
+		}
+		
+		// Remove undesired features from the final annotation.
+		features.remove("agent");
+		features.remove("recipient");
+		features.remove("isAgentSubject");
+		features.remove("rule");
+		
+		annotations.add(
+				fvps.firstNode(), fvps.lastNode(),
+				"Transaction",
+				features);
+	}
+	catch (InvalidOffsetException e)
+	{
+		throw new GateRuntimeException(e);
+	}
+}

@@ -1,0 +1,3 @@
+loaner_verbs.lst:financialTransaction:loanerVerb
+borrower_verbs.lst:financialTransaction:borrowerVerb
+purchaser_verbs.lst:financialTransaction:purchaserVerb

@@ -1,0 +1,19 @@
+Program       ::== Statement $
+
+Statement     ::== P ( Expr )
+              ::== id = Expr
+              ::== { StatementList }
+
+StatementList ::== Statement StatementList
+              ::==   [epsilon]
+
+Expr          ::== digit op Expr
+              ::== digit
+              ::== id
+
+digit         ::== 1 | 2 | 3 | 4 | 5
+                   6 | 7 | 8 | 9 | 0
+
+op            ::== + | -
+
+id            ::== a | b | c ... z

@@ -1,0 +1,3 @@
+glob:.metadata
+glob:*.class
+glob:*/bin/*

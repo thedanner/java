@@ -1,0 +1,379 @@
+Phase: LoanVerbTenses
+Input: Person Organization VG FinancialVG Split
+Options: control = appelt
+
+
+Rule: A_verbs_B
+Priority: 40
+(
+  ({FinancialVG contains {VG.voice == "active"},
+    FinancialVG contains {VG.tense == "SimPre"},
+    FinancialVG contains {VG.type == "FVG"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalSubject,
+	recipient = :fvg.FinancialVG.grammaticalObject,
+	isAgentSubject = "yes",
+	actionProgress = "present",
+	actionCommitment = "no",
+	rule = "A_verbs_B"
+}
+
+
+Rule: A_verbed_B
+Priority: 40
+(
+  ({FinancialVG contains {VG.voice == "active"},
+    FinancialVG contains {VG.tense == "SimPas"},
+    FinancialVG contains {VG.type == "FVG"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalSubject,
+	recipient = :fvg.FinancialVG.grammaticalObject,
+	isAgentSubject = "yes",
+	actionProgress = "completed",
+	actionCommitment = "no",
+	rule = "A_verbed_B"
+}
+
+
+Rule: A_did_not_verb_B
+Priority: 45
+(
+  ({FinancialVG contains {VG.voice == "active"},
+    FinancialVG contains {VG.tense == "SimPas"},
+    FinancialVG contains {VG.neg == "yes"},
+    FinancialVG contains {VG.type == "FVG"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalSubject,
+	recipient = :fvg.FinancialVG.grammaticalObject,
+	isAgentSubject = "yes",
+	actionProgress = "completed",
+	actionCommitment = "no",
+	negative = "yes",
+	rule = "A_did_not_verb_B"
+}
+
+
+Rule: A_has_verbed_B
+Priority: 50
+(
+  ({FinancialVG contains {VG.voice == "active"},
+    FinancialVG contains {VG.tense == "PrePer"},
+    FinancialVG contains {VG.type == "FVG"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalSubject,
+	recipient = :fvg.FinancialVG.grammaticalObject,
+	isAgentSubject = "yes",
+	actionProgress = "completed",
+	actionCommitment = "no",
+	rule = "A_has_verbed_B"
+}
+
+
+Rule: A_has_not_verbed_B
+Priority: 55
+(
+  ({FinancialVG contains {VG.voice == "active"},
+    FinancialVG contains {VG.tense == "PrePer"},
+    FinancialVG contains {VG.neg == "yes"},
+    FinancialVG contains {VG.type == "FVG"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalSubject,
+	recipient = :fvg.FinancialVG.grammaticalObject,
+	isAgentSubject = "yes",
+	actionProgress = "no",
+	actionCommitment = "no",
+	negative = "yes",
+	rule = "A_has_not_verbed_B"
+}
+
+
+Rule: A_has_been_verbed_B
+Priority: 60
+(
+  ({FinancialVG contains {VG.voice == "passive"},
+    FinancialVG contains {VG.tense == "PrePer"},
+    FinancialVG contains {VG.type == "FVG"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalObject,
+	recipient = :fvg.FinancialVG.grammaticalSubject,
+	isAgentSubject = "no",
+	actionProgress = "completed",
+	actionCommitment = "no",
+	rule = "A_has_been_verbed_B"
+}
+
+
+Rule: A_is_verbing_B
+Priority: 50
+(
+  ({FinancialVG contains {VG.voice == "active"},
+    FinancialVG contains {VG.tense == "PreCon"},
+    FinancialVG contains {VG.type == "FVG"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalSubject,
+	recipient = :fvg.FinancialVG.grammaticalObject,
+	isAgentSubject = "yes",
+	actionProgress = "inProgress",
+	actionCommitment = "inProgress",
+	rule = "A_is_verbing_B"
+}
+
+
+Rule: A_is_not_verbing_B
+Priority: 55
+(
+  ({FinancialVG contains {VG.voice == "active"},
+    FinancialVG contains {VG.tense == "PreCon"},
+	FinancialVG contains {VG.neg == "yes"},
+    FinancialVG contains {VG.type == "FVG"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalSubject,
+	recipient = :fvg.FinancialVG.grammaticalObject,
+	isAgentSubject = "yes",
+	actionProgress = "no",
+	actionCommitment = "no",
+	negative = "yes",
+	rule = "A_is_not_verbing_B"
+}
+
+
+Rule: A_may_be_verbing_B
+Priority: 40
+(
+  ({FinancialVG contains {VG.voice == "none"},
+    FinancialVG contains {VG.tense == "BeVBG"},
+    FinancialVG contains {VG.type == "MODAL"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalObject,
+	recipient = :fvg.FinancialVG.grammaticalSubject,
+	isAgentSubject = "no",
+	actionProgress = "no",
+	actionCommitment = "futurePossible",
+	modal = "yes",
+	rule = "A_may_be_verbing_B"
+}
+
+
+// BUG
+// The builtin JAPE rule for VG doesn't annotate this sequence properly.
+// The token for "verbing" isn't properly POS tagged as a VBG...
+// Rather, it's tagged as NN (at least for "may not be borrowing").
+// Therefore, the VG doesn't include it as part of the verb phrase.
+/*
+Rule: A_may_not_be_verbing_B
+Priority: 45
+(
+  ({FinancialVG contains {VG.voice == "none"},
+    FinancialVG contains {VG.tense == "BeVBG"},
+    FinancialVG contains {VG.type == "MODAL"},
+	FinancialVG contains {VG.neg == "yes"}}):fvg
+):fv
+--> // finish me
+*/
+
+
+Rule: A_should_be_verbed_B
+Priority: 40
+(
+  ({FinancialVG contains {VG.voice == "none"},
+    FinancialVG contains {VG.tense == "BeVBN"},
+    FinancialVG contains {VG.type == "MODAL"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalObject,
+	recipient = :fvg.FinancialVG.grammaticalSubject,
+	isAgentSubject = "no",
+	actionProgress = "no",
+	actionCommitment = "recommended",
+	modal = "yes",
+	rule = "A_should_be_verbed_B"
+}
+
+
+Rule: A_should_not_be_verbed_B
+Priority: 45
+(
+  ({FinancialVG contains {VG.voice == "none"},
+    FinancialVG contains {VG.tense == "BeVBN"},
+    FinancialVG contains {VG.type == "MODAL"},
+	FinancialVG contains {VG.neg == "yes"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalObject,
+	recipient = :fvg.FinancialVG.grammaticalSubject,
+	isAgentSubject = "no",
+	actionProgress = "no",
+	actionCommitment = "recommendedNot",
+	modal = "yes",
+	negative = "yes",
+	rule = "A_should_be_verbed_B"
+}
+
+
+Rule: A_should_have_been_verbed_B
+Priority: 40
+(
+  ({VG.tense == "HaveVBN"})
+  ({FinancialVG contains {VG.voice == "none"},
+    FinancialVG contains {VG.tense == "Pas"},
+    FinancialVG contains {VG.type == "PART"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalObject,
+	recipient = :fvg.FinancialVG.grammaticalSubject,
+	isAgentSubject = "no",
+	actionProgress = "completed",
+	actionCommitment = "no",
+	rule = "A_should_have_been_verbed_B"
+}
+
+
+Rule: A_should_not_have_been_verbed_B
+Priority: 45
+(
+  ({VG.tense == "HaveVBN",
+    VG.neg == "yes"})
+  ({FinancialVG contains {VG.voice == "none"},
+    FinancialVG contains {VG.tense == "Pas"},
+    FinancialVG contains {VG.type == "PART"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalObject,
+	recipient = :fvg.FinancialVG.grammaticalSubject,
+	isAgentSubject = "no",
+	actionProgress = "completed",
+	actionCommitment = "no",
+	negative = "yes",
+	rule = "A_should_not_have_been_verbed_B"
+}
+
+
+Rule: A_will_verb_B
+Priority: 40
+(
+  ({FinancialVG contains {VG.voice == "active"},
+    FinancialVG contains {VG.tense == "SimFut"},
+    FinancialVG contains {VG.type == "FVG"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalSubject,
+	recipient = :fvg.FinancialVG.grammaticalObject,
+	isAgentSubject = "yes",
+	actionProgress = "no",
+	actionCommitment = "future",
+	future = "yes",
+	rule = "A_will_verb_B"
+}
+
+
+Rule: A_will_not_verb_B
+Priority: 45
+(
+  ({FinancialVG contains {VG.voice == "active"},
+    FinancialVG contains {VG.tense == "SimFut"},
+	FinancialVG contains {VG.neg == "yes"},
+    FinancialVG contains {VG.type == "FVG"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalSubject,
+	recipient = :fvg.FinancialVG.grammaticalObject,
+	isAgentSubject = "yes",
+	actionProgress = "no",
+	actionCommitment = "no",
+	negative = "yes",
+	future = "yes",
+	rule = "A_will_not_verb_B"
+}
+
+
+Rule: A_will_be_verbing_B
+Priority: 40
+(
+  ({FinancialVG contains {VG.voice == "active"},
+    FinancialVG contains {VG.tense == "FutCon"},
+    FinancialVG contains {VG.type == "FVG"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalSubject,
+	recipient = :fvg.FinancialVG.grammaticalObject,
+	isAgentSubject = "yes",
+	actionProgress = "no",
+	actionCommitment = "future",
+	future = "yes",
+	rule = "A_will_be_verbing_B"
+}
+
+
+Rule: A_will_not_be_verbing_B
+Priority: 45
+(
+  ({FinancialVG contains {VG.voice == "active"},
+    FinancialVG contains {VG.tense == "FutCon"},
+    FinancialVG contains {VG.neg == "yes"},
+    FinancialVG contains {VG.type == "FVG"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalSubject,
+	recipient = :fvg.FinancialVG.grammaticalObject,
+	isAgentSubject = "yes",
+	actionProgress = "no",
+	actionCommitment = "no",
+	negative = "yes",
+	future = "yes",
+	rule = "A_will_not_be_verbing_B"
+}
+
+
+// 2 VGs
+Rule: A_will_be_verbed_B
+Priority: 60
+(
+  ({VG.voice == "active",
+    VG.tense == "SimFut",
+    VG.type == "FVG"}):futureVG
+  ({FinancialVG contains {VG.voice == "none"},
+    FinancialVG contains {VG.tense == "Pas"},
+    FinancialVG contains {VG.type == "PART"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalObject,
+	recipient = :fvg.FinancialVG.grammaticalSubject,
+	isAgentSubject = "no",
+	actionProgress = "no",
+	actionCommitment = "future",
+	future = "yes",
+	rule = "A_will_be_verbed_B"
+}
+
+
+Rule: A_will_not_be_verbed_B
+Priority: 65
+(
+  ({VG.voice == "active",
+    VG.tense == "SimFut",
+	VG.neg == "yes",
+    VG.type == "FVG"}):futureVG
+  ({FinancialVG contains {VG.voice == "none"},
+    FinancialVG contains {VG.tense == "Pas"},
+    FinancialVG contains {VG.type == "PART"}}):fvg
+):fv
+--> :fv.FinancialVerb = {
+	agent = :fvg.FinancialVG.grammaticalObject,
+	recipient = :fvg.FinancialVG.grammaticalSubject,
+	isAgentSubject = "no",
+	actionProgress = "no",
+	actionCommitment = "no",
+	negative = "yes",
+	future = "yes",
+	rule = "A_will_not_be_verbed_B"
+}
+

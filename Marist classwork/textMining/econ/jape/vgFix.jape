@@ -1,0 +1,19 @@
+/*
+This should fix the following "issues" witht the VP Chunker grammar included
+with GATE (as of 5b1, build 3048):
+-improperly not marking "...should not..." with the {'neg' = 'yes'} feature
+*/
+
+Phase: VgFix
+Input: VG Token
+
+
+Rule: ShouldNot_FixNeg
+({VG contains Token.string == "not"}):notVG
+-->
+{
+	AnnotationSet notVGs = (AnnotationSet) bindings.get("notVG");
+	Annotation notVGAnn = notVGs.iterator().next();
+	
+	notVGAnn.getFeatures().put("neg", "yes");
+}

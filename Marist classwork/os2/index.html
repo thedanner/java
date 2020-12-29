@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<!-- The much simplified html 5 doctype,
+	as canvas isn't technically supported by xhtml. -->
+
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	
+    <title>
+        mAd.OS
+    </title>
+	
+    <link rel="shortcut icon" href="favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="mados.css" />
+	
+	<script type="text/javascript" src="scripts/jquery-1.2.6.min.js"></script>
+	<script type="text/javascript" src="scripts/jquery.cookie.js"></script>
+	
+	<!-- Utility and helper scripts. -->
+	<script type="text/javascript" src="scripts/utils.js"></script>
+	<script type="text/javascript" src="scripts/queue.js"></script>
+	
+    <!-- Globals CONSTANTS and _Variables. Must be first.
+         That is, "first" after utils? -->
+    <script type="text/javascript" src="scripts/os/globals.js"></script>
+    
+	<!-- OS Support Routines: Make sure these are above the Kernel routine, since it needs these. -->
+	<script type="text/javascript" src="scripts/os/canvastext.js"></script>
+	
+	<script type="text/javascript" src="scripts/os/tty.js"></script>
+	<script type="text/javascript" src="scripts/os/console.js"></script>	
+	
+	<script type="text/javascript" src="scripts/simulation/drivers/deviceDriver.js"></script>
+	<script type="text/javascript" src="scripts/simulation/drivers/keyboard.js"></script>
+	<script type="text/javascript" src="scripts/simulation/drivers/diskDrive.js"></script>
+	
+	<script type="text/javascript" src="scripts/simulation/drivers/fileSystem.js"></script>
+	<script type="text/javascript" src="scripts/os/shell.js"></script>
+	
+	
+	<!-- Hardware Simulation Routine -->
+	<script type="text/javascript" src="scripts/os/pcb.js"></script>
+	
+	<script type="text/javascript" src="scripts/simulation/hardwareSimulation.js"></script>
+	
+	<script type="text/javascript" src="scripts/simulation/mainMemory.js"></script>
+	<script type="text/javascript" src="scripts/simulation/memoryAccessor.js"></script>
+	<script type="text/javascript" src="scripts/os/memoryManager.js"></script>
+	
+	<script type="text/javascript" src="scripts/simulation/cpu.js"></script>
+	
+	
+	<!-- Kernel Routine: Make sure that this is below the OS support routines,
+		which it needs.  The kernel core should come last, after its other
+		portions have been loaded. -->
+	<script type="text/javascript" src="scripts/os/kernel/mode.js"></script>
+	<script type="text/javascript" src="scripts/os/kernel/logging.js"></script>
+	<script type="text/javascript" src="scripts/os/kernel/processScheduler.js"></script>
+	<script type="text/javascript" src="scripts/os/kernel/processes.js"></script>
+	<script type="text/javascript" src="scripts/os/kernel/softwareInterrupts.js"></script>
+	<script type="text/javascript" src="scripts/os/kernel/commands.js"></script>
+	<script type="text/javascript" src="scripts/os/kernel/files.js"></script>
+	<script type="text/javascript" src="scripts/os/kernel/core.js"></script>
+	
+</head>
+
+<body onload="simInit();">
+
+<table id="tableDisplay" style="border:1px solid white;">
+    <tr>
+        <td>
+            <input type="button"
+                   id="btnStartOS"
+                   name="brnStartOS"
+                   class="large_button"
+                   value="Start"
+				   style="color: green;"
+                   onclick="simBtnStartOS_click(this);"
+            />
+			
+            <input type="button"
+                   id="btnHaltOS"
+                   name="brnHaltOS"
+                   class="large_button"
+                   disabled="disabled"
+                   value="Emergency Halt"
+				   style="color: #D00000;"
+                   onclick="simBtnHaltOS_click(this);"
+            />
+			
+			<input type="button"
+                   id="btnReset"
+                   name="brnReset"
+                   disabled="disabled"
+                   value="Reset"
+				   style="color: blue;"
+                   onclick="simBtnReset_click(this);"
+            />
+        </td>
+		
+        <td class="label">
+            User Program
+        </td>
+    </tr>
+	
+    <tr valign="top">
+        <td id="tdDisplay">
+            <canvas id="display"
+                    width="500px"
+                    height="500px"
+					tabindex="1"
+			></canvas>
+        </td>
+		
+        <td id="tdUserProgram">
+            <textarea 	id="taUserProgram"
+						class="userProgram"
+						rows="50"
+						cols="50"
+			></textarea>
+        </td>
+    </tr>
+	
+	<tr>
+        <td class="label">
+            Debug display
+			
+            <input type="button"
+                   id="btnUpdateDebug"
+                   name="btnUpdateDebug"
+                   value="Update"
+				   disabled="disabled"
+				   onclick="simBtnUpdateDebug_click(this);"
+				   
+				   style="display: none;"
+            />
+			
+			|
+			
+			<input type="button"
+                   id="btnSingleStep"
+                   name="btnSingleStep"
+                   value="Single Step"
+				   disabled="disabled"
+                   onclick="simBtnSingleStep_click(this);"
+            />
+			
+			<input type="button"
+                   id="btnRunContinuously"
+                   name="btnRunContinuously"
+                   value="Run Continuously"
+				   disabled="disabled"
+                   onclick="simBtnRunContinuously_click(this);"
+            />
+        </td>
+		
+        <td class="label">
+            Log
+        	<input type="button"
+        	       id="btnClearLog"
+        	       name="btnClearLog"
+        	       disabled="disabled"
+        	       value="Clear"
+        	       onclick="simBtnClearLog_click(this);"
+            	   style=""
+        	/>
+        </td>
+    </tr>
+	
+	<tr valign="top">
+        <td id="tdDebug">
+            <div id="divDebug"
+				 class="debug"
+			></div>
+        </td>
+		
+        <td id="tdLog">
+            <div id="divLog"
+                 class="log"
+            ></div>
+        </td>
+    </tr>
+</table>
+
+<p></p>
+
+<table width="100%" border="0" cellspacing="0" cellpadding="0">
+    <tr valign="top">
+        <td align="center" class="footer">
+            Copyright &copy; 2008 -
+			In Soviet Russia, Rights Resverve <em>You</em>! - 
+            Reproduction is prohibited without the express written consent of
+			your mother.
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

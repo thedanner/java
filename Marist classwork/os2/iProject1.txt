@@ -1,0 +1,12 @@
+mAd.OS
+iProject 1:
+Creative feature: enhanced log (as if to mimic an attached debugger).
+
+Scrolling not implemented intentionally.  Learning HTML Canvas
+for something as unimportant (to the objectives of the class)
+as scrolling is beyond the scope of an operating systems course.
+
+Same for graphical status bar; it's implemened outside the canvas
+for this reason.
+
+-Howlin' Mad Murdoch

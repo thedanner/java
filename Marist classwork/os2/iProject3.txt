@@ -1,0 +1,51 @@
+mAd.OS
+iProject 3:
+
+What's new since iP2?
+
+Multiprogramming:
+  - Memory has been reorganized to be 0x300/768 words long.
+    It is divided into pages of 0x80/128 bytes long.  The
+    memory manager allocates one of these pages to a program,
+    and sets the base and limit registers appropriately.
+    The page is freed but not zeroed on termination of a process.
+  - Many kernel level commands have been added to support running
+    programs.  They deal with the currently running program,
+    loaded but not yet run programs, and program ready to run
+    (Ready Queue).
+  - A round-robin scheduler has been implemented.  It has a mode for
+    FCFS, which simply sets the quantum to a large value.  There is
+    no shell command for this.
+  - Shell commands have been implemented and refined for:
+      load
+      run (pid...|all)
+      kill (pid...|all)
+      quantum (value|default)
+  
+  - The help command has been modified to save space by listing
+    the available commands, and displaying their description if
+    passed a parameter.
+  - A reset button has been added.
+  - More trace/system log statements were added, and more CSS classes
+    to help identify them were added.
+  
+   Multiprogramming works for up to 6 programs in memory at once
+   (the number of frames available in physical memory).
+   
+   In addition, a number of previously subtle bugs in the CPU
+   instuctions have been fixed.  They also have a new format.
+   
+   - SYS calls are actually implemented now
+     (whoops, forgot that last time).
+   - Software interrupts have been implemented as well.
+  
+
+Single step and continuous processing has also been implemented.
+
+However, in the process, I feel that I put too much logic in the CPU
+object.  That is supposed to model the hardware, and I feel that I
+put too much OS logic and code in it.  However, this also feels like
+better software design (versus putting it into krnClockTick() ).
+
+I'm kinda torn, but until there's a compelling reason to do this
+differently, I'm leaving it the way it is.

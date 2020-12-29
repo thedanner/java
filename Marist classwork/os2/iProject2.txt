@@ -1,0 +1,21 @@
+mAd.OS
+iProject 2:
+
+What's new since iP1?
+
+- Scrolling has been implemented in the form of a character matrix which is
+painted to the canvas, rather than the letters being directly painted.
+
+-Implemented a CPU, Memory Management Unit, and Main Memory as hardware
+simulation items.
+-Created a PCB object, which isn't much used at the moment.
+-Added the facility to load and run user programs, as in the description of
+iProject2.
+-Added a debug display, which show register values and the first couple words
+in memory.
+
+-ShellCommands now have aliases.
+-Several other minor enhancements
+
+Wanted to get done as well:
+Single step; perhaps for next time.

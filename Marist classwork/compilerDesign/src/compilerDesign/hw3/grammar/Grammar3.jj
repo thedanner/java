@@ -1,0 +1,329 @@
+/* Grammar3.jj */
+/*
+Dan Mangiarelli,
+Dave Weisfelner
+
+JavaCC input file for grammar specified in
+Homework Project 3.
+
+*/
+
+PARSER_BEGIN(Grammar3)
+
+package compilerDesign.hw3.grammar;
+
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+
+@SuppressWarnings("all")
+public class Grammar3
+{
+  /** A "buffer" for output from the compilation phase. */
+  private static StringBuilder output = new StringBuilder();
+  
+  /** The newline character (or characters) based on platform. */
+  public static String NEWLINE = System.getProperty("line.separator");
+  
+  /**
+   * Empties the output buffer.
+   */
+  public static void resetOutput()
+  {
+    output.setLength(0);
+  }
+  
+  /**
+   * Gets a string containing all of the data in the output buffer.
+   */
+  public static String getOutput()
+  {
+    return output.toString();
+  }
+  
+  /**
+   * Appends the specified string to the end of the output buffer, followed by
+   * a newline.
+   * @param s the string to append
+   */
+  public static void appendln(String s)
+  {
+    output.append(s).append(NEWLINE);
+  }
+  
+  /**
+   * Appends the specified string to the end of the output buffer.
+   * @param s the string to append
+   */
+  public static void append(String s)
+  {
+    output.append(s);
+  }
+  
+  public static void main(String args[])
+  throws ParseException, IOException
+  {
+    Reader stream = null;
+    
+    if (args.length == 0)
+    {
+      // use the console (standard input)
+      stream = new InputStreamReader(System.in);
+    }
+    else if (args.length == 1)
+    {
+      // read from a file
+      stream = new FileReader(args[0]);
+    }
+    else
+    {
+      // print usage notes
+      System.out.println("Arguments:");
+      System.out.println("[file] - optionally specify an input file");
+      System.out.println("Standard input is used if no file is specified.");
+      
+      return;
+    }
+    
+    Grammar3 parser = new Grammar3(stream);
+    
+    parser.Input();
+  }
+
+}
+
+PARSER_END(Grammar3)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+TOKEN :
+{
+  < Int: "int" >
+| < Char: "char" >
+| < CharLiteral: ["a"-"z"] >
+| < Digit: ["0"-"9"] >
+| < Op: ["+", "-"] >
+
+| < Print: "P" >
+
+| < LParen: "(" >
+| < RParen: ")" >
+
+| < LBrace: "{" >
+| < RBrace: "}" >
+
+| < Quote: "\"" >
+| < Equals: "=" >
+}
+
+void Input() :
+{}
+{
+  Statement() <EOF>
+  {
+    appendln("Parse complete.");
+  }
+}
+
+String Statement() :
+{
+  Token t;
+  String s1, s2;
+}
+{
+  <Print> <LParen> s1=Expression() <RParen>
+  {
+    s1 = "PrintStmt " + s1;
+    
+    appendln(s1);
+    return s1;
+  }
+|
+  s1=Id() <Equals> s2=Expression()
+  {
+    s1 = "AsssignStmt " + s1 + " = " + s2;
+    
+    appendln(s1);
+    return s1;
+  }
+|
+  s1=VarDecl()
+  {
+    s1 = "VarDeclStatement " + s1;
+    
+    appendln(s1);
+    return s1;
+  }
+|
+  <LBrace> s1=StatementList() <RBrace>
+  {
+    s1 = "StmtList {" + s1 + "}";
+    
+    appendln(s1);
+    return s1;
+  }
+}
+
+String StatementList() :
+{
+  String s1 = null, s2 = null;
+}
+{
+  [s1=Statement() s2=StatementList()]
+  {
+    String ret = "";
+    
+    if(s1 != null)
+      ret += "'" + s1 + "'";
+    
+    if(s2 != null)
+      ret += "  '" + s2 + "'";
+    
+    appendln("In StmtList: " + ret);
+    
+    if(ret.length() == 0)
+      return null;
+    
+    return ret;
+  }
+}
+
+String Expression() :
+{
+  Token t;
+  String s;
+}
+{
+  s=IntExpression()
+  {
+    appendln("IntExpr " + s);
+    return s;
+  }
+|
+  s=CharExpression()
+  {
+    appendln("CharExpr " + s);
+    return s;
+  }
+|
+  s=Id()
+  {
+    appendln("Id (in expr() ): " + s);
+    return s;
+  }
+}
+
+String IntExpression() :
+{
+  Token t;
+  String s;
+}
+{
+  t=<Digit> s=OpExpression()
+  {
+    appendln("In IntExpr: " + t.image + " " + s);
+    return t.image + " " + s;
+  }
+}
+
+String OpExpression() :
+{
+  Token t = null;
+  String s = null;
+}
+{
+  [t=<Op> s=Expression()]
+  {
+    if(t == null || s == null)
+      return "";
+    else
+    {
+      appendln("-OpExpr " + t.image + " " + s);
+      return t.image + " " + s;
+    }
+  }
+}
+
+String CharExpression() :
+{
+  Token t;
+  String s;
+}
+{
+  <Quote> s=CharList() <Quote>
+  {
+    s = "CharList \"" + s + "\"";
+    
+    appendln(s);
+    return s;
+  }
+}
+
+String CharList() :
+{
+  Token t = null;
+  String s = null;
+}
+{
+  [t=<CharLiteral> s=CharList()]
+  {
+    String ret = "";
+    
+    if(t != null)
+      ret += t.image + " ";
+    
+    if(s != null)
+      ret += s;
+    
+  	return ret;
+  }
+}
+
+String VarDecl() :
+{
+  String s1, s2;
+}
+{
+  s1=Type() s2=Id()
+  {
+    appendln("In VarDecl: " + s1 + " " + s2);
+    return s1 + " " + s2;
+  }
+}
+
+String Id() :
+{
+  Token t;
+}
+{
+  t=<CharLiteral>
+  {
+    appendln("Id: " + t.image);
+    return t.image;
+  }
+}
+
+String Type() :
+{
+  Token t;
+}
+{
+  t=<Int>
+  {
+    appendln("Type " + t.image);
+    return t.image;
+  }
+|
+  t=<Char>
+  {
+    appendln("Type " + t.image);
+    return t.image;
+  }
+}

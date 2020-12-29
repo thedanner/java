@@ -1,0 +1,494 @@
+/* Grammar4.jj */
+/*
+Dan Mangiarelli,
+Dave Weisfelner
+
+JavaCC input file for grammar specified in
+Homework Project 4.
+
+Add the following line to the Token Manager class
+(above the 'public class' declaration) to ignore
+compiler warnings (Java 1.5 or greater only).
+
+@SuppressWarnings({"unused", "static-access"})
+
+*/
+
+PARSER_BEGIN(Grammar4)
+
+package compilerDesign.hw4.grammar;
+
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.LinkedList;
+
+import compilerDesign.hw4.scope.BigScope;
+import compilerDesign.hw4.scope.Entry;
+import compilerDesign.hw4.scope.Entry.Type;
+
+@SuppressWarnings("all")
+public class Grammar4
+{
+  /** A "buffer" for output from the compilation phase. */
+  private static LinkedList<Message> output = new LinkedList<Message>();
+  
+  /** The newline character (or characters) based on platform. */
+  public static String NEWLINE = System.getProperty("line.separator");
+  
+  static BigScope symbolTable = new BigScope();
+  
+  /**
+   * Empties the output buffer and symbol table.
+   */
+  public static void reset()
+  {
+    output.clear();
+    symbolTable.reset();
+  }
+  
+  public static String getSymbolTableText()
+  {
+    return symbolTable.displayTable();
+  }
+  
+  /**
+   * Gets a string containing all of the data in the output buffer.
+   */
+  public static Message[] getOutput()
+  {
+    return output.toArray(new Message[output.size()]);
+  }
+  
+  /**
+   * Appends the specified string to the end of the output buffer, followed by
+   * a newline.
+   * @param s the string to append
+   */
+  public static void appendln(String s)
+  {
+    output.add(new Message(s, false));
+  }
+  
+  /**
+   * Appends the specified string to the end of the output buffer, followed by
+   * a newline.
+   * @param s the string to append
+   */
+  public static void appendlnV(String s)
+  {
+    output.add(new Message(s, true));
+  }
+  
+  public static Type resolveType(String s)
+  {
+  	if(s == null)
+      return null;
+    
+    if("int".equals(s))
+      return Type.INT;
+    
+    if("char".equals(s))
+      return Type.CHAR;
+      
+    return null;
+  }
+  
+  public static Type determineType(String s)
+  {
+    if(s == null)
+      return null;
+    
+    if(isDigit(s))
+      return Type.INT;
+    
+    if(isChar(s) || isCharList(s))
+      return Type.CHAR;
+    
+    return null;
+  }
+  
+  public static boolean isDigit(String s)
+  {
+  	return Character.isDigit(s.charAt(0));
+  }
+  
+  public static boolean isChar(String s)
+  {
+  	return Character.isLowerCase(s.charAt(0));
+  }
+  
+  public static boolean isCharList(String s)
+  {
+  	if(s.startsWith("\"") && s.endsWith("\""))
+  	  return true;
+  	
+  	return false;
+  }
+  
+  public static void main(String args[])
+  throws ParseException, IOException
+  {
+    Reader stream = null;
+    
+    if (args.length == 0)
+    {
+      // use the console (standard input)
+      stream = new InputStreamReader(System.in);
+    }
+    else if (args.length == 1)
+    {
+      // read from a file
+      stream = new FileReader(args[0]);
+    }
+    else
+    {
+      // print usage notes
+      System.out.println("Arguments:");
+      System.out.println("[file] - optionally specify an input file");
+      System.out.println("Standard input is used if no file is specified.");
+      
+      return;
+    }
+    
+    Grammar4 parser = new Grammar4(stream);
+    
+    parser.Input();
+  }
+
+}
+
+PARSER_END(Grammar4)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+TOKEN :
+{
+  < Int: "int" >
+| < Char: "char" >
+| < CharLiteral: ["a"-"z", " "] >
+| < Digit: ["0"-"9"] >
+| < Op: ["+", "-"] >
+
+| < Print: "Print" >
+
+| < LParen: "(" >
+| < RParen: ")" >
+
+| < LBrace: "{" >
+{
+	Grammar4.symbolTable.addNewScope();
+}
+| < RBrace: "}" >
+{
+	//Grammar4.symbolTable.closeCurrentScope();
+}
+
+| < Equals: "=" >
+}
+
+// Shamefully ripped (and "tweaked") from
+// Java1.1noLA.jj sample grammar
+TOKEN :
+{
+  < STRING_LITERAL:
+      "\"" ( ["a"-"z"," "] )* "\""
+  >
+}
+
+void Input() :
+{
+  // "setup" the environment
+  symbolTable.addNewScope();
+  
+  appendln("In Input()");
+}
+{
+  Statement() <EOF>
+  {
+  	// close the symbol table
+    symbolTable.closeCurrentScope();
+  	
+    appendln("Parse complete.");
+    
+    symbolTable.displayTable();//XXX
+  }
+}
+
+String Statement() :
+{
+  String s1, s2;
+  Token now = token;
+  
+  appendln("In Statement()");
+}
+{
+  <Print> <LParen> s1=Expression() <RParen>
+  {
+    s1 = "PrintStmt: " + s1;
+    
+    appendlnV(s1);
+    return s1;
+  }
+|
+  s1=Id() <Equals> s2=Expression()
+  {
+    appendlnV(":Checking for '" + s1 + "' in symbol table");
+    
+    Type t = determineType(s2);
+    
+    Entry e = symbolTable.getEntryByName(s1);
+    
+    boolean notDeclared = (e == null);
+    
+    if(notDeclared)
+      throw new ParseException(
+          "Not defined: '" + s1 + "' " +
+          "(at line " + now.beginLine + ", column " +
+          now.beginColumn + ")");
+    
+    appendlnV(":Has been declared");
+    
+    if(!symbolTable.isEntryInScope(e))
+      throw new ParseException(
+          "Visibility: '" + s1 + "' is not visible in the current scope " +
+          "(at line " + now.beginLine + ", column " +
+          now.beginColumn + ")");
+    
+    appendlnV(":Is in scope");
+    
+    boolean validAssignment = (t == e.getType());
+    
+    if(!validAssignment)
+      throw new ParseException(
+          "Incompatible types: '" + s1 + "' was defined with type " +
+          e.getType() + ", but the value being assigned is of type " + t +
+          " (at line " + now.beginLine + ", column " +
+          now.beginColumn + ")");
+    
+    appendlnV(":Types match");
+    
+    s1 = "AsssignStmt: " + s1 + " = " + s2;
+    
+    appendlnV(s1);
+    return s1;
+  }
+|
+  s1=VarDecl()
+  {
+    s1 = "VarDeclStatement: " + s1;
+    
+    appendlnV(s1);
+    return s1;
+  }
+|
+  <LBrace> s1=StatementList() <RBrace>
+  {
+  	symbolTable.closeCurrentScope();
+  	
+    s1 = "StmtList: {" + s1 + "}";
+    
+    appendlnV(s1);
+    return s1;
+  }
+}
+
+String StatementList() :
+{
+  String s1 = null, s2 = null;
+
+  appendln("In StatementList()");
+}
+{
+  [s1=Statement() s2=StatementList()]
+  {
+  	String ret = "< " + s1 + " | " + s2 + " >";
+  	
+    appendlnV(" StmtList: " + ret);
+    
+    return ret;
+  }
+}
+
+String Expression() :
+{
+  Token t;
+  String s;
+  
+  Token now = token;
+  
+  appendln("In Expression()");
+}
+{
+  s=IntExpression()
+  {
+    appendlnV("IntExpr: " + s);
+    return s;
+  }
+|
+  s=CharExpression()
+  {
+    appendlnV("CharExpr: " + s);
+    return s;
+  }
+|
+  s=Id()
+  {
+  	appendlnV(":Checking for '" + s + "' in symbol table");
+  	
+  	Entry e = symbolTable.getEntryByName(s);
+    
+    boolean notDeclared = (e == null);
+    
+    if(notDeclared)
+      throw new ParseException(
+          "Not defined: '" + s + "' " +
+          "(at line " + now.beginLine + ", column " +
+          now.beginColumn + ")");
+    
+    appendlnV(":Has been declared");
+    
+    if(!symbolTable.isEntryInScope(e))
+      throw new ParseException(
+          "Visibility: '" + s + "' is not visible in the current scope " +
+          "(at line " + now.beginLine + ", column " +
+          now.beginColumn + ")");
+    
+    appendlnV(":Is in scope");
+  	
+    appendlnV("Id: " + s);
+    return s;
+  }
+}
+
+String IntExpression() :
+{
+  Token t;
+  String s;
+  
+  appendln("In IntExpression()");
+}
+{
+  t=<Digit> s=OpExpression()
+  {
+    appendlnV("IntExpr: " + t.image + " " + s);
+    return t.image + " " + s;
+  }
+}
+
+String OpExpression() :
+{
+  Token t = null;
+  String s = null;
+  
+  appendln("In OpExpression()");
+}
+{
+  [t=<Op> s=Expression()]
+  {
+    if(t == null || s == null)
+      return "";
+    else
+    {
+      appendlnV("OpExpr: " + t.image + " " + s);
+      return t.image + " " + s;
+    }
+  }
+}
+
+String CharExpression() :
+{
+  Token t;
+  String s;
+}
+{
+  s=CharList()
+  {
+    return s;
+  }
+}
+
+String CharList() :
+{
+  Token t = null;
+}
+{
+  t=<STRING_LITERAL>
+  {
+    if(t != null)
+      return t.image;
+    
+  	return "<null>";
+  }
+}
+
+String VarDecl() :
+{
+  String s1, s2;
+  Token now = token.next;
+  
+  appendln("In VarDecl()");
+}
+{
+  s1=Type() s2=Id()
+  {
+  	Entry e = symbolTable.getEntryByName(s2);
+    
+    appendlnV(":Checking for '" + s2 + "' in symbol table");
+    
+    if(e != null)
+      throw new ParseException(
+          "Already defined: " + s2 +
+          " was already defined with type " + e.getType() +
+          " (at line " + now.beginLine + ", column " +
+          now.beginColumn + ")");
+  	
+  	appendlnV(":Not found, adding");
+  	
+  	symbolTable.addToCurrentScope(s2, resolveType(s1));
+  	
+    appendlnV("VarDecl: " + s2 + " [" + resolveType(s1) + "]");
+    return s2 + " [" + resolveType(s1) + "]";
+  }
+}
+
+String Id() :
+{
+  Token t;
+  
+  appendln("In Id()");
+}
+{
+  t=<CharLiteral>
+  {
+    appendlnV("Id: " + t.image);
+    return t.image;
+  }
+}
+
+String Type() :
+{
+  Token t;
+  
+  appendln("In Type()");
+}
+{
+  t=<Int>
+  {
+    appendlnV("Type: " + t.image);
+    return t.image;
+  }
+|
+  t=<Char>
+  {
+    appendlnV("Type: " + t.image);
+    return t.image;
+  }
+}

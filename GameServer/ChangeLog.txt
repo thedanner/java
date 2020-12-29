@@ -1,0 +1,106 @@
+2009-10-06
+* Workaround Valve's Left 4 Dead bugs introduced circa September 29 
+
+2009-08-30
+* Renamed UnrealTournamentServer to UnrealEngine1Server to emphasize that it
+  works on all the engine games.
+* Added support for Unreal Engine 2, which includes UT2003, UR2004, Killing
+  Floor, and more.
+
+2009-05-02
+* Added support to output JSON instead of XML.
+* Changed the backing for the servers from JDOM to regular properties with
+  getters.  Requesting XML will now generate it on the fly.
+* Added master server support for whitelisted ("white") servers or empty
+  ("noplayers") servers.
+* Changed the server lists to try a different master server if the first one
+  fails.
+* Fixed the Game-Monitor.com parser not updating players correctly.
+* Updated Game-Monitor.com URL
+
+2009-01-26
+* Removed unneeded threading Base.java
+* Added support for \napp (excluding application IDs)
+
+2008-11-26
+* Removed use of Password class and dependency on BarkerJr's Utilities library.
+* Updated Gold Source server support for the latest changes to the Gold Source
+  protocol.
+* Fixed errors when parsing Source server names with binary data in it.
+* Added support for fetching the entire server list, not just the first 230.
+
+2008-02-03
+* Added support for sending rcon commands to Valve servers, after providing a
+  password
+* Upgraded licensing to GPLv3
+* Added support for fetching a Source server list from the Valve master servers.
+  It is recommended that the dnsjava library be included in your classpath if
+  your DNS server is slow.
+* Added hashcode() and equals() to the servers to support HashMaps/HashSets
+* Added namespaces for easier merging with other documents
+* Fixed a NullPointer Exception in the Game-Monitor plugin.
+* Moved BZip2 support into the jar, eliminating the ant.jar requirement
+* Removed the requirement on Apache Commons Lang
+
+2007-12-30
+* Added support for ServerSpy querying
+* Fixed an issue where the GameMonitor plugin wasn't caching
+* Added support for BZip2-compressed messages.  These are common with some
+  Source mods.  This means that rules are now supported in Source servers.
+* Changed load*(int*) to to throw a RequestTimeoutException, which includes a
+  list of requests which failed to load, instead of a TimeoutException.
+* Fixed the plugins so they provide accurate hashcodes and won't be duplicated
+  in the server.
+
+2007-11-28
+* Challenge keys now expire after 60 seconds.  Since the Valve servers can
+  only remember the last 1024 challenges, it's important to expire challenges
+  in long-lived GameServer instances.  Once expired, the instance requests a
+  new challenge the next time it needs one.
+* Valve servers no longer clear player names when the maps change.  While
+  players are reconnecting, the server sends back their names as "".  We can
+  pretty safely assume that the player names remain the same, and don't
+  overwrite them with "" anymore.
+* Basic plugin support has been added.  Plugins are classes which are injected
+  into the GameServer instance and handle events like onLoad().  They can, of
+  course, add listeners to the instance if they need to handle standard events.
+* Support for Game-Monitor.com information has been added as a plugin.  It
+  returns historical and ranking information about the server.  The nifty thing
+  about using this plugin is that it will also return basic (Name, Max Players,
+  etc) data about your server, even if your server fails to respond to the
+  query.  The catch is that the server has to be a Premium Server, which is a
+  pay-service from Game-Monitor.com.
+
+
+2007-11-18
+* Apache Commons Lang 2.2 is now required, rather than 2.0.
+* The load() method now throws InterruptedException. This is only thrown if
+  something external to the library interrupts the method's thread. In any
+  case, you will need to catch and/or throw the exception in your code. At the
+  same time, the load*(int) methods in the Valve servers have been deprecated,
+  rather than adding the exception.
+* Added support for Unreal Tournament and Battlefield 1942
+* Added a getInstance() method to each server. This method can be used to
+  retrieve any server which has not yet had close() called on it. If the server
+  was not open or has been closed, it is created new.
+* Data sent and received to and from the servers are now treated as UTF-8,
+  rather than ASCII, to support other character sets.
+
+2007-11-10
+* Times are now displayed in local time of the server, rather than UTC. This
+  should make them considerably easier to read. If you need to keep them in
+  UTC, change the server or JVM time-zone to UTC.
+* Constructors now accept InetSocketAddress, which contains IP or hostname and
+  port. The constructors for String and InetAddress have been deprecated.
+* In order move the asynchronous complexities into the library, the plethora of
+  load*() methods have been augmented by a load() method which accepts a
+  variable number of Request enums, and queries them all asynchronously. Along
+  the same theme, the Listener has been updated to add loaded() and updated()
+  methods which pass in the Request enum which has changed. The sample code has
+  been merged into one, using the new methods, however none of the existing
+  methods have been deprecated.
+* In order to minimize use of finite host resources, all of the servers now
+  share a single local UDP port, and therefor a single thread devoted to
+  listening to it. The close() method on the game servers is still important,
+  however, as the UDP port and its thread will only be terminated once all of
+  the servers are closed.

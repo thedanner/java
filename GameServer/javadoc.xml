@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="javadoc">
+    <target name="javadoc">
+        <javadoc access="protected" author="true" classpath="../Shared Libraries/jdom-1.1/build/jdom.jar;../Shared Libraries/dnsjava-2.0.6.jar;../Shared Libraries/RconEd-2.3/RconEd.jar" destdir="C:\Documents and Settings\BarkerJr\My Documents\doc" nodeprecated="false" nodeprecatedlist="false" noindex="true" nonavbar="false" notree="true" packagenames="net.barkerjr.gameserver.plugins,net.barkerjr.gameserver.gamespy,org.json,net.barkerjr.gameserver.sample,net.barkerjr.gameserver,org.apache.tools.bzip2,net.barkerjr.gameserver.util,net.barkerjr.gameserver.valve,net.barkerjr.gameserver.unreal" source="1.6" sourcepath="src" splitindex="false" use="false" version="true">	
+            <link href="http://jdom.org/docs/apidocs/"/>
+            <link href="http://www.dnsjava.org/dnsjava-current/doc/"/>
+            <link href="http://rconed.sourceforge.net/javadoc/"/>
+            <link href="http://java.sun.com/javase/6/docs/api/"/>
+        </javadoc>
+    </target>
+</project>

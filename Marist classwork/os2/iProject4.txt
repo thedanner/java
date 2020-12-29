@@ -1,0 +1,78 @@
+mAd.OS
+iProject 4:
+
+What's new since iP3?
+
+This is probably going to serve as the last iteration of the project.
+It implements the file system and device driver as outlined in the
+spec.  It has all those cool kernel commands too:
+
+krnCreateFile(name)
+krnWriteFile(name, data)
+krnReadFile(name[, length])
+krnDeleteFile(name)
+krnFormatFileSystem()
+krnGetFilesize(name)
+
+No GUI at the moment; Firebug works for these purposees though.
+
+However, implementing the device driver portion of the project was
+insanely difficult dealing with all the asynchronous calls to
+the database drive.  getBlock and setBlock should block until
+the data is retrieved.  I spent a good deal of time trying to out
+how to get that to work before ultimately abandoning it.
+
+I attempted the cookie-based idea as others have suggested, but
+cookies alone don't provide enough storage, so I opted for a
+hybrid approach, merging cookies, the database, and a JS-based
+data structure (a big matrix).  Whenever a write is made to a block
+that actually contains data (e.g. not an empty string), a
+representation of that physical location is placed an an array.
+The representation is of the form T_S_B~T_S_B~T_S_B
+(e.g. if (1,0,0), (2,0,0), and (2,0,1) have data written to them,
+the cooke value would be "b=1_0_0~2_0_0~2_0_1").  Blank writes
+remove that representation from the list.  Whenever that list is
+changed, it is serialized in that manner and stored in the JS
+cookie.
+
+This cookie is made persistant for something like a couple hundred
+days, and handled via a cookie jQuery plugin).  The purpose of
+persisting this cookie is so that on boot, the HDD device driver
+can fetch the blocks with content from the database, and place
+those in the internal data structure.  Writes are fired off via the
+JSONP call as soon as setBlock is called.  This gives, I feel,
+the best of both worlds while allowing get and setBlock to block
+until they have a return value, as it seems like they should do at
+that low of a level.  Callback programm would have been complex,
+and I wanted to see how well this would work.  Callbacks are obviously
+the way to go for the upper level stuff though, such as the syscalls.
+
+This system isn'n perfect, but in practice it's fine for most
+purposes.  Lots of loads at boot might be a bit of an issue, but for
+now it's OK.  I origianlly had a rudimentary locking mechanism,
+that prevent reads and writes if a database write was recently started
+(or reads during the boot-time loads), which caused getBlock and
+setBlock to fail if the callback didn't return.  Turns out for writing,
+sometimes the calls wouldn't return fast enough, even though when it
+was very performant (what seemed like sub-ms response time), so I
+abandoned the locks.  Usability > a little bit more safety here.
+
+
+
+The only thing implemented from iP5 are the scheduling algorithms.
+Paging and swapping aren't in place; no time.  Neither are the
+sys calls for disk I/O.  They are controlled by shell commands.
+Process priorities are specified as an argument to load.  They
+are similar to Windows': 1 is the minimum, 24 is the highest, and
+12 is the default (ProcessExplorer says 8 is normal and 12 is high,
+so I guess I'm making a statement).
+
+
+
+Have fun grading all these, and Merry Christmas!
+
+
+
+(pretend I have
+ some cheesy ASCII
+ here of a tree)

@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project name="NameColor" default="build" basedir="..">
+		<description>
+				Build ${title} program project
+		</description>
+
+	<!-- Create the time stamp -->
+	<tstamp/>
+	
+	<!-- set global properties for this build -->
+	<!-- same as title -->
+	<property name="title" value="NameColor"/>
+	<!-- base package (use / if nested) -->
+	<property name="srcpath" value="nameColor"/>
+	<property name="src" location="${srcpath}"/>
+	<!-- ${abbreviation}.jar format -->
+	<property name="shortname" value="NC.jar"/>
+	
+	<!-- directory to store the generated jars -->
+	<property name="location" location="jars"/>
+	<!-- full name of the jarifle -->
+	<property name="jar" value="${title}.jar"/>
+	
+	<!-- names of the output jar files -->
+	<property name="jarpath" location="${location}/${jar}"/>
+	<property name="jarpath2" location=
+		"${location}/${shortname}/${title}_${DSTAMP}.jar"/>
+	
+	<!-- manifest related files -->
+	<property name="srcmanifest"
+		location="${location}/${shortname}/manifest.txt"/>
+	<property name="destmanifestpath"
+		value="META-INF"/>
+	<property name="destmanifest"
+		location="${destmanifestpath}/MANIFEST.MF"/>
+	
+	<!-- temp dir for build output -->
+	<property name="build" location="build"/>
+	
+	<!-- Main compilation and build task -->
+	<target name="build"
+				description="builds the project from source">
+		<echo> -----  Building ${jar}  ----- </echo>
+		<!-- Compiles the project
+				It first calls dist, but with the dependcies,
+				it falls through to compile and then init -->
+		<antcall target="dist"/>
+		
+		<!-- echo the names of the geenraed files -->
+		<antcall target="echoFiles"/>
+		
+		<!-- clean everything out now in case the upload fails -->
+		<antcall target="clean"/>
+		
+		<!-- copy to use naming "convention" -->
+		<antcall target="copyjars"/>
+		
+		<!-- finally, upload it -->
+		<antcall target="upload"/>
+	</target>
+	
+	<!-- makes a temp directory for compiled class files
+			and echos the build number and datestamp that will be used -->
+	<target name="init"
+				description="get things ready for building">
+		<!-- echo the numbers to be used for the date stamp -->
+		<echo>
+			Generated datestamp "${DSTAMP}"
+		</echo>
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="${build}"/>
+	</target>
+	
+	<!-- compliles the project -->
+	<target name="compile" depends="init"
+				description="compile the source" >
+		<!-- Compile the java code from ${src} into ${build} -->
+		<echo>Compiling...</echo>
+		
+		<!-- remove all the junk first -->
+		<delete file="${build}/*"/>
+		
+		<!-- compile it -->
+		<javac
+			destdir="${build}"
+			srcdir="${srcpath}"
+			target="1.5"
+			source="1.5"
+		/>
+		
+		<!-- done -->
+		<echo>Done compiling.</echo>
+	</target>
+	
+	<!-- creates a jar file using a provided manifest -->
+	<target name="dist" depends="compile"
+				description="generate the distribution" >
+		<!-- clean the old zip and jarfiles  -->
+		<delete file="${jarpath}"/>
+		
+		<!-- Put everything in ${build} into the .jar file -->
+		<jar
+			jarfile="${jarpath}"
+			manifest="${srcmanifest}"
+			basedir="${build}"/>
+	</target>
+	
+	<!-- copies the jarfiles to other locations,
+			applying a datestamp to some -->
+	<target name="copyjars"
+				description="copies the initial jar to other locations">
+		<!-- Copies the signed jar so that it can use
+				a more complex naming/backup convention -->
+		<copy file="${jarpath}"
+			tofile="${jarpath2}"
+			overwrite="true"/>
+	</target>
+	
+	<!-- echoes the names of the files that were created
+			while the make job was runnung -->
+	<target name="echoFiles"
+				description="echo the names of the generated files">
+		<!-- echo the names of all of the
+				files that were just created -->
+		<echo> Generated the following: </echo>
+		<echo> -- ${jarpath} </echo>
+		<echo> -- ${jarpath2} </echo>
+	</target>
+	
+	<!-- uploads the jar to a web server via FTP -->
+	<!-- NOTE: this has additional Ant depencencies -->
+	<target name="upload"
+				description="uploads the jar to a web server">
+		<echo>Uploading...</echo>
+		<!-- upload the compiled package -->
+		
+		<ftp
+				password="9YtXVH3i"
+				server="mysite.verizon.net"
+				userid="dan198792"
+				binary="yes"
+				action="put"
+				remotedir="nc/">
+			<fileset dir="${location}">
+				<include name="${jar}"/>
+			</fileset>
+		</ftp>
+	</target>
+	
+	<!-- cleans up any junk left over by the build process -->
+	<target name="clean"
+				description="clean up" >
+		<!-- Delete the ${build} directory tree -->
+		<delete dir="${build}"/>
+	</target>
+	
+	<!-- end of project -->
+</project> <!-- eof -->

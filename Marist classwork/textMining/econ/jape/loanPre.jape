@@ -1,0 +1,66 @@
+Phase: LoanPre
+Input: Lookup VG
+
+
+Rule: FinancialVG_ActiveLoaner
+(
+  ({VG.voice == "active",
+    VG contains Lookup.minorType == "loanerVerb"})
+    |
+  ({VG.voice == "passive",
+    VG contains Lookup.minorType == "borrowerVerb"})
+	|
+  ({VG.voice == "none",
+    VG contains Lookup.minorType == "borrowerVerb"})
+):financialVG
+--> :financialVG.FinancialVG =
+{
+	grammaticalSubject = "issuer",
+	grammaticalObject = "borrower"
+}
+
+
+Rule: FinancialVG_ActiveBorrower
+(
+  ({VG.voice == "active",
+    VG contains Lookup.minorType == "borrowerVerb"})
+    |
+  ({VG.voice == "passive",
+    VG contains Lookup.minorType == "loanerVerb"})
+	|
+  ({VG.voice == "none",
+    VG contains Lookup.minorType == "loanerVerb"})
+):financialVG
+--> :financialVG.FinancialVG =
+{
+	grammaticalSubject = "borrower",
+	grammaticalObject = "issuer"
+}
+
+
+Rule: FinancialVG_ActivePurchaser
+(
+  ({VG.voice == "active",
+    VG contains Lookup.minorType == "purchaserVerb"})
+):financialVG
+--> :financialVG.FinancialVG =
+{
+	grammaticalSubject = "purchaser",
+	grammaticalObject = "purchasee"
+}
+
+
+Rule: FinancialVG_ActivePurchasee
+(
+  ({VG.voice == "passive",
+    VG contains Lookup.minorType == "purchaserVerb"})
+  |
+  ({VG.voice == "none",
+    VG contains Lookup.minorType == "purchaserVerb"})
+):financialVG
+--> :financialVG.FinancialVG =
+{
+	grammaticalSubject = "purchasee",
+	grammaticalObject = "purchaser"
+}
+
